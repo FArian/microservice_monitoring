@@ -1,10 +1,10 @@
-package com.microservice.monitoring;
+package com.micro.service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class EricssonMicroserviceMonitoringApplicationTests {
+class MicroServiceApplicationTests {
 
 	@Test
 	void contextLoads() {
