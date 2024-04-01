@@ -1,6 +1,12 @@
 version: '3'
 
 services:
+  microsservice:
+    image: farian/microsservice_app:latest
+    container_name: microsserviceCnr
+    restart: always
+    ports:
+      - 8080:8080
   prometheus:
     image: prom/prometheus
     container_name: prometheusCnr
@@ -10,7 +16,7 @@ services:
     command:
       - --config.file=/etc/prometheus/prometheus.yml
     volumes:  # corrected typo here
-      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./cnr_conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - 9090:9090
 
@@ -19,9 +25,3 @@ services:
     container_name: grafanaCnr
     ports:
       - 3000:3000
-
-  zipkin:
-    image: openzipkin/zipkin
-    container_name: zipkinCnr
-    ports:
-      - 9411:9411
