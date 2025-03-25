@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+
+  # --- Service A: Spring Boot Microservice ---
+  servicea:
+    image: asgharim/service-a:latest
+    container_name: servicea_Cnr
+    environment:
+      - TZ=Europe/Berlin                        # Set timezone to Europe/Berlin
+      - JAVA_OPTS=-Duser.timezone=Europe/Berlin # Set Java timezone for the application
+      - SERVICE_B_URL=http://serviceb:8081/service-b # Internal URL to connect to Service B
+      - SERVICE_C_URL=http://servicec:8082/service-c # Internal URL to connect to Service C
+      - SPRING_APPLICATION_NAME=servicea_Cnr    # Application name for Zipkin tracing
+      - SPRING_ZIPKIN_BASE_URL=http://zipkin:9411 # URL of the Zipkin tracing server
+      - SPRING_SLEUTH_SAMPLER_PROBABILITY=1.0   # Trace all requests (sampling rate 100%)
+      - SPRING_ZIPKIN_ENABLED=true              # Enable sending trace data to Zipkin
+      - SPRING_SLEUTH_ENABLED=true              # Enable Spring Sleuth tracing
+      - SPRING_ZIPKIN_COMPRESSION_ENABLED=true  # Use compression for trace data sent to Zipkin
+    restart: always
+    ports:
+      - 8080:8080                               # Expose port 8080 externally
+    networks:
+      - microservices-network
+
+  # --- Service B: Spring Boot Microservice ---
+  serviceb:
+    image: asgharim/service-b:latest
+    container_name: serviceb_Cnr
+    environment:
+      - TZ=Europe/Berlin
+      - JAVA_OPTS=-Duser.timezone=Europe/Berlin
+      - SPRING_APPLICATION_NAME=serviceb_Cnr
+      - SPRING_ZIPKIN_BASE_URL=http://zipkin:9411
+      - SPRING_SLEUTH_SAMPLER_PROBABILITY=1.0
+      - SPRING_ZIPKIN_ENABLED=true
+      - SPRING_SLEUTH_ENABLED=true
+      - SPRING_ZIPKIN_COMPRESSION_ENABLED=true
+    restart: always
+    ports:
+      - 8081:8081
+    networks:
+      - microservices-network
+
+  # --- Service C: Spring Boot Microservice ---
+  servicec:
+    image: asgharim/service-c:latest
+    container_name: servicec_Cnr
+    environment:
+      - TZ=Europe/Berlin
+      - JAVA_OPTS=-Duser.timezone=Europe/Berlin
+      - SPRING_APPLICATION_NAME=servicec_Cnr
+      - SPRING_ZIPKIN_BASE_URL=http://zipkin:9411
+      - SPRING_SLEUTH_SAMPLER_PROBABILITY=1.0
+      - SPRING_ZIPKIN_ENABLED=true
+      - SPRING_SLEUTH_ENABLED=true
+      - SPRING_ZIPKIN_COMPRESSION_ENABLED=true
+    restart: always
+    ports:
+      - 8082:8082
+    networks:
+      - microservices-network
+
+  # --- Prometheus for Monitoring and Metrics Collection ---
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheusCnr
+    restart: always
+    environment:
+      - TZ=Europe/Berlin
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml" # Prometheus configuration file path
+    volumes:
+      - ./cnr_conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml # Mount external config
+    ports:
+      - 9090:9090 # Expose Prometheus web interface externally
+    networks:
+      - microservices-network
+
+  # --- Grafana for Visualization of Metrics ---
+  grafana:
+    image: grafana/grafana
+    container_name: grafanaCnr
+    restart: always
+    environment:
+      - TZ=Europe/Berlin
+      - GF_SECURITY_ADMIN_USER=admin                 # Grafana admin username
+      - GF_SECURITY_ADMIN_PASSWORD=admin             # Grafana admin password
+      - GF_USERS_ALLOW_SIGN_UP=false                 # Disable user self-registration
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/system-dashboard.json # Default home dashboard
+    volumes:
+      - ./cnr_conf/grafana/datasources:/etc/grafana/provisioning/datasources # Provisioning datasources
+      - ./cnr_conf/grafana/dashboards:/var/lib/grafana/dashboards             # Provisioning dashboards
+      - ./cnr_conf/grafana/dashboard_provisioning.yml:/etc/grafana/provisioning/dashboards/dashboard_provisioning.yml # Dashboard provisioning configuration
+    ports:
+      - 3000:3000 # Expose Grafana web interface externally
+    networks:
+      - microservices-network
+
+  # --- Zipkin for Distributed Tracing ---
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkinCnr
+    restart: always
+    ports:
+      - 9411:9411 # Expose Zipkin tracing UI externally
+    networks:
+      - microservices-network
+
+# --- Shared Network Configuration ---
+networks:
+  microservices-network:
+    driver: bridge
