@@ -16,7 +16,7 @@ import org.springframework.web.client.RestTemplate;
 public class MicroServiceApplication {
 
 	private static final String BASEURL = "https://api.openweathermap.org/data/2.5/weather";
-	private static final String API_KEY = "488af055c3c272eb71a439355479a400";
+	private static final String API_KEY = "488af055c3c272eb71a439355479a401";
 
 	private static final Log logger = LogFactory.getLog(MicroServiceApplication.class);
 
